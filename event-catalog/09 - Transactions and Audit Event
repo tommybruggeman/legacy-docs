@@ -1,0 +1,510 @@
+# Chapter 9 — Transaction and Audit Events
+
+---
+title: Transaction and Audit Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/18-Transaction.md
+  - ../domain-model/19-Audit-Event.md
+  - ../rulebook/administration.md
+---
+
+# Transaction and Audit Events
+
+## Purpose
+
+This chapter defines the canonical events governing administrative operations, system transactions, and immutable audit history.
+
+Unlike Ownership, Financial, Draft, Trade, and Waiver events, which describe changes to League assets, Transaction and Audit events describe **how those changes were coordinated, validated, recorded, and preserved**.
+
+Every state-changing operation performed within Legacy belongs to a Transaction.
+
+Every Transaction generates an immutable Audit history.
+
+Together they provide complete traceability, reproducibility, and accountability.
+
+---
+
+# Guiding Principle
+
+Business Events describe League state.
+
+Transactions coordinate Business Events.
+
+Audit Events preserve Business Events forever.
+
+Nothing that changes League state exists without an auditable transaction.
+
+---
+
+# Transaction Model
+
+```text
+Command
+      │
+creates
+      ▼
+Transaction
+      │
+coordinates
+      ▼
+Business Events
+      │
+recorded as
+      ▼
+Audit Events
+```
+
+Transactions do not own League assets.
+
+Transactions coordinate the execution of asset changes.
+
+Audit Events preserve historical truth.
+
+---
+
+# Transaction Lifecycle
+
+```text
+TransactionStarted
+        │
+        ▼
+TransactionValidated
+        │
+        ▼
+Business Events Emitted
+        │
+        ▼
+TransactionCommitted
+```
+
+Alternative paths
+
+```text
+TransactionStarted
+
+↓
+
+TransactionFailed
+```
+
+or
+
+```text
+TransactionStarted
+
+↓
+
+TransactionRolledBack
+```
+
+---
+
+# Audit Lifecycle
+
+```text
+Business Event
+
+↓
+
+AuditEventRecorded
+
+↓
+
+AuditArchived
+```
+
+Historical events are never deleted.
+
+---
+
+# Scope
+
+This chapter defines:
+
+- TransactionStarted
+- TransactionValidated
+- TransactionCommitted
+- TransactionFailed
+- TransactionRolledBack
+
+- AuditEventRecorded
+- AuditEventCorrected
+- AuditArchived
+
+- AdministrativeOverrideApplied
+- AdministrativeCorrectionPerformed
+
+---
+
+# General Invariants
+
+Every Transaction shall satisfy:
+
+1. Every Transaction has a unique identifier.
+2. Every Business Event belongs to exactly one Transaction.
+3. Transactions execute atomically.
+4. Transactions are immutable after commitment.
+5. Failed Transactions shall not modify League state.
+6. Audit Events are append-only.
+7. Historical records shall never be destroyed.
+8. Every administrative action must generate an Audit Event.
+9. Every correction preserves historical truth.
+10. Every event remains replayable.
+
+---
+
+# TransactionStarted
+
+## Purpose
+
+Represents the beginning of a coordinated state-changing operation.
+
+### Trigger
+
+A Command begins execution.
+
+### Business Impact
+
+• Creates Transaction context
+
+• Allocates transaction identifier
+
+• Begins validation pipeline
+
+---
+
+# TransactionValidated
+
+## Purpose
+
+Represents successful validation prior to execution.
+
+### Business Impact
+
+• Confirms legality
+
+• Locks execution state
+
+• Authorizes event emission
+
+---
+
+# TransactionCommitted
+
+## Purpose
+
+Represents successful completion of every operation within the Transaction.
+
+### Business Impact
+
+• Finalizes Business Events
+
+• Persists deterministic state
+
+• Enables replay
+
+• Enables audit
+
+### AI Interpretation
+
+The AI recognizes every committed Transaction as authoritative League history.
+
+---
+
+# TransactionFailed
+
+## Purpose
+
+Represents unsuccessful execution.
+
+### Business Impact
+
+• No League state changes
+
+• Records failure reason
+
+• Preserves audit trail
+
+---
+
+# TransactionRolledBack
+
+## Purpose
+
+Represents reversal of a partially executed Transaction.
+
+### Business Impact
+
+• Restores previous League state
+
+• Prevents inconsistent ownership
+
+• Preserves failure history
+
+---
+
+# AuditEventRecorded
+
+## Purpose
+
+Creates an immutable historical record of a Business Event.
+
+### Business Impact
+
+• Preserves historical truth
+
+• Enables deterministic replay
+
+• Enables forensic analysis
+
+• Enables compliance
+
+---
+
+# AuditEventCorrected
+
+## Purpose
+
+Represents an administrative correction to historical metadata without deleting original records.
+
+### Business Impact
+
+• Preserves original history
+
+• Appends correction record
+
+• Maintains historical integrity
+
+---
+
+# AuditArchived
+
+## Purpose
+
+Represents archival of historical Audit records while preserving replay capability.
+
+### Business Impact
+
+• Reduces operational storage
+
+• Maintains historical accessibility
+
+• Preserves replay integrity
+
+---
+
+# AdministrativeOverrideApplied
+
+## Purpose
+
+Represents an authorized manual override performed by League administration.
+
+Examples include:
+
+- Force approving a Trade
+- Adjusting Draft Order
+- Correcting Ownership
+- Correcting Contracts
+- Restoring Franchise state
+
+### Business Impact
+
+• Alters deterministic League state
+
+• Generates mandatory Audit record
+
+• Preserves administrator identity
+
+• Records override reason
+
+### AI Interpretation
+
+The AI shall recognize administrative overrides as authoritative even when they supersede normal business rules.
+
+---
+
+# AdministrativeCorrectionPerformed
+
+## Purpose
+
+Represents correction of erroneous historical state while preserving complete event history.
+
+### Business Impact
+
+• Corrects League state
+
+• Preserves audit history
+
+• Records correction chain
+
+---
+
+# Workflow Examples
+
+## Successful Transaction
+
+```text
+Command
+
+↓
+
+TransactionStarted
+
+↓
+
+TransactionValidated
+
+↓
+
+Business Events
+
+↓
+
+TransactionCommitted
+
+↓
+
+AuditEventRecorded
+```
+
+---
+
+## Failed Transaction
+
+```text
+Command
+
+↓
+
+TransactionStarted
+
+↓
+
+TransactionFailed
+```
+
+---
+
+## Administrative Override
+
+```text
+AdministrativeOverrideApplied
+
+↓
+
+Business Events
+
+↓
+
+AuditEventRecorded
+```
+
+---
+
+## Historical Correction
+
+```text
+AdministrativeCorrectionPerformed
+
+↓
+
+AuditEventCorrected
+```
+
+---
+
+# Relationship to Other Chapters
+
+Every Business Event documented within this Event Catalog executes inside a Transaction.
+
+Examples include:
+
+```text
+TradeExecuted
+
+ContractCreated
+
+RosterAssignmentTransferred
+
+DraftSelectionMade
+
+FreeAgentSigned
+
+LeagueMembershipActivated
+```
+
+These Business Events define League state.
+
+Transactions coordinate their execution.
+
+Audit Events permanently preserve their history.
+
+---
+
+# AI Interpretation
+
+Transaction and Audit events provide authoritative evidence regarding:
+
+- Event ordering
+
+- Historical replay
+
+- Administrative actions
+
+- Transaction success
+
+- Transaction failure
+
+- Data lineage
+
+- League integrity
+
+- System accountability
+
+The AI shall treat committed Transactions as the canonical ordering mechanism for every deterministic calculation performed within Legacy.
+
+---
+
+# Validation Checklist
+
+Before publishing Transaction and Audit events verify:
+
+✓ Transaction identifier unique
+
+✓ Event ordering deterministic
+
+✓ Transaction atomicity preserved
+
+✓ Failed Transactions isolated
+
+✓ Rollback integrity maintained
+
+✓ Audit history append-only
+
+✓ Administrative actions audited
+
+✓ Replay deterministic
+
+✓ Historical truth preserved
+
+✓ No destructive corrections performed
+
+---
+
+# Final Principle
+
+Transactions are the execution engine of Legacy.
+
+Business Events describe what changed.
+
+Transactions guarantee those changes occur safely, atomically, and deterministically.
+
+Audit Events guarantee those changes remain permanently observable.
+
+Together they form the foundation of Legacy's event-sourced architecture, ensuring every League can be reconstructed, verified, and explained from immutable historical evidence.
