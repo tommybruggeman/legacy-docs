@@ -1,0 +1,508 @@
+# Chapter 8 — Waiver and Free Agency Events
+
+---
+title: Waiver and Free Agency Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/17-Waiver-Claim.md
+  - ../domain-model/09-Roster-Assignment.md
+  - ../domain-model/08-Contract.md
+  - ../domain-model/04-Franchise.md
+  - ../rulebook/waiver-rules.md
+---
+
+# Waiver and Free Agency Events
+
+## Purpose
+
+This chapter defines the canonical events governing the acquisition of Players who are not currently owned by a Franchise.
+
+Unlike Trades, which transfer ownership between Franchises, or Drafts, which introduce new Players into League competition, Waivers and Free Agency govern the redistribution of unowned Players.
+
+These events ensure that every Player transitions through a deterministic ownership lifecycle while respecting League rules regarding waiver priority, claim windows, roster legality, contracts, and salary cap constraints.
+
+---
+
+# Guiding Principle
+
+Released Players become League assets.
+
+Waivers determine who earns acquisition rights.
+
+Free Agency grants ownership when no competing claims exist.
+
+Ownership begins only after successful acquisition.
+
+---
+
+# Acquisition Model
+
+```text
+Owned Player
+      │
+Player Released
+      │
+      ▼
+Free Agent Pool
+      │
+      ├──────────────┐
+      ▼              ▼
+Waiver Claim     Direct Free Agent Signing
+      │              │
+      └──────┬───────┘
+             ▼
+Roster Assignment Created
+             │
+             ▼
+Contract Created
+```
+
+Players are never "ownerless."
+
+They exist in either:
+
+- Franchise ownership
+- League Free Agent Pool
+
+---
+
+# Acquisition Lifecycle
+
+```text
+PlayerReleased
+        │
+        ▼
+PlayerAddedToWaivers
+        │
+        ▼
+WaiverClaimSubmitted
+        │
+        ▼
+WaiverClaimProcessed
+        │
+        ▼
+WaiverClaimAwarded
+        │
+        ▼
+RosterAssignmentCreated
+        │
+        ▼
+ContractCreated
+```
+
+Alternative path:
+
+```text
+PlayerAvailableForFreeAgency
+        │
+        ▼
+FreeAgentSigned
+        │
+        ▼
+RosterAssignmentCreated
+```
+
+---
+
+# Scope
+
+This chapter defines:
+
+- PlayerAddedToWaivers
+- WaiverWindowOpened
+- WaiverClaimSubmitted
+- WaiverClaimWithdrawn
+- WaiverClaimsProcessed
+- WaiverClaimAwarded
+- WaiverClaimRejected
+- WaiverPriorityUpdated
+- PlayerAvailableForFreeAgency
+- FreeAgentSigned
+- FreeAgencyClosed
+
+---
+
+# General Invariants
+
+Every waiver event shall satisfy:
+
+1. Every Player exists before acquisition.
+2. A Player may have only one active owner within a League.
+3. A Player may have multiple pending claims.
+4. Only one claim may ultimately succeed.
+5. Waiver processing is deterministic.
+6. Waiver priority follows League Rules.
+7. Contracts are created only after successful acquisition.
+8. Historical waiver results are immutable.
+9. Failed claims never alter League state.
+10. Ownership changes occur only after successful processing.
+
+---
+
+# PlayerAddedToWaivers
+
+## Purpose
+
+Represents the transition of a released Player into the League waiver system.
+
+### Trigger
+
+PlayerReleased event completes.
+
+### Business Impact
+
+• Creates waiver eligibility
+
+• Starts waiver clock
+
+• Prevents immediate acquisition
+
+• Adds Player to waiver pool
+
+### AI Interpretation
+
+The AI recognizes the Player as unavailable until the waiver period expires or claims are processed.
+
+---
+
+# WaiverWindowOpened
+
+## Purpose
+
+Opens the official waiver claim period.
+
+### Business Impact
+
+• Accepts claims
+
+• Starts waiver timer
+
+• Enables claim competition
+
+---
+
+# WaiverClaimSubmitted
+
+## Purpose
+
+Represents submission of a waiver claim by a Franchise.
+
+### Business Impact
+
+• Records acquisition request
+
+• Preserves priority order
+
+• Enables future processing
+
+• Does not alter ownership
+
+---
+
+# WaiverClaimWithdrawn
+
+## Purpose
+
+Represents voluntary withdrawal of a pending waiver claim.
+
+### Business Impact
+
+• Removes pending request
+
+• Updates processing queue
+
+---
+
+# WaiverClaimsProcessed
+
+## Purpose
+
+Processes all pending claims after the waiver period expires.
+
+### Business Impact
+
+• Evaluates priority
+
+• Resolves competing claims
+
+• Determines winning Franchise
+
+• Rejects unsuccessful claims
+
+---
+
+# WaiverClaimAwarded
+
+## Purpose
+
+Represents successful acquisition rights awarded to a Franchise.
+
+### Business Impact
+
+• Creates ownership eligibility
+
+• Creates roster assignment
+
+• Creates contract
+
+• Updates waiver priority
+
+• Removes Player from waiver pool
+
+### AI Interpretation
+
+Ownership is now deterministic and may be used for roster evaluation, cap calculations, and future transactions.
+
+---
+
+# WaiverClaimRejected
+
+## Purpose
+
+Represents an unsuccessful waiver claim.
+
+### Business Impact
+
+• No ownership change
+
+• Preserves historical record
+
+• Updates audit history
+
+---
+
+# WaiverPriorityUpdated
+
+## Purpose
+
+Represents recalculation of waiver priority after successful processing.
+
+### Business Impact
+
+• Updates future acquisition order
+
+• Alters competitive balance
+
+• Affects future waiver outcomes
+
+---
+
+# PlayerAvailableForFreeAgency
+
+## Purpose
+
+Represents expiration of the waiver period without a successful claim.
+
+### Business Impact
+
+• Removes Player from waivers
+
+• Places Player into unrestricted Free Agency
+
+• Enables immediate signing
+
+---
+
+# FreeAgentSigned
+
+## Purpose
+
+Represents acquisition of an unrestricted Free Agent.
+
+### Business Impact
+
+• Creates ownership
+
+• Creates roster assignment
+
+• Creates contract
+
+• Removes Player from Free Agent pool
+
+• Updates roster state
+
+• Updates cap calculations
+
+• Updates team evaluations
+
+### AI Interpretation
+
+The AI treats this as a completed ownership acquisition equivalent to a successful waiver claim but without priority resolution.
+
+---
+
+# FreeAgencyClosed
+
+## Purpose
+
+Represents administrative closure of a Free Agency acquisition window.
+
+### Business Impact
+
+• Prevents additional signings
+
+• Preserves League schedule
+
+---
+
+# Workflow Examples
+
+## Standard Waiver Claim
+
+```text
+PlayerReleased
+
+↓
+
+PlayerAddedToWaivers
+
+↓
+
+WaiverWindowOpened
+
+↓
+
+WaiverClaimSubmitted
+
+↓
+
+WaiverClaimsProcessed
+
+↓
+
+WaiverClaimAwarded
+
+↓
+
+RosterAssignmentCreated
+
+↓
+
+ContractCreated
+```
+
+---
+
+## Unclaimed Player
+
+```text
+PlayerReleased
+
+↓
+
+PlayerAddedToWaivers
+
+↓
+
+WaiverClaimsProcessed
+
+↓
+
+PlayerAvailableForFreeAgency
+```
+
+---
+
+## Free Agent Signing
+
+```text
+PlayerAvailableForFreeAgency
+
+↓
+
+FreeAgentSigned
+
+↓
+
+RosterAssignmentCreated
+
+↓
+
+ContractCreated
+```
+
+---
+
+# Downstream Events
+
+Successful acquisitions may emit:
+
+```text
+RosterAssignmentCreated
+
+ContractCreated
+
+TeamEvaluationUpdated
+
+LeagueEvaluationUpdated
+```
+
+These events remain owned by their respective aggregates.
+
+---
+
+# AI Interpretation
+
+Waiver and Free Agency events provide authoritative evidence regarding:
+
+- Current Free Agent pool
+- Pending waiver claims
+- Waiver priority
+- Acquisition timing
+- Roster availability
+- Cap implications
+- Franchise acquisition strategy
+- League asset distribution
+
+The AI shall distinguish between:
+
+- Pending claims
+- Awarded claims
+- Completed acquisitions
+
+Only completed acquisitions alter deterministic League state.
+
+---
+
+# Validation Checklist
+
+Before publishing Waiver and Free Agency events verify:
+
+✓ Player exists
+
+✓ Franchise exists
+
+✓ Waiver period valid
+
+✓ Priority calculated correctly
+
+✓ League Rules satisfied
+
+✓ Salary Cap satisfied
+
+✓ Roster limits satisfied
+
+✓ Ownership unique
+
+✓ Historical claims preserved
+
+✓ Event ordering deterministic
+
+---
+
+# Final Principle
+
+Waivers and Free Agency ensure that every unowned Player re-enters League competition through deterministic, rule-driven acquisition.
+
+Trades redistribute owned assets.
+
+Drafts introduce new assets.
+
+Waivers and Free Agency redistribute unowned assets.
+
+Together, these systems guarantee that Player ownership is always governed by transparent, reproducible, and auditable League events.
