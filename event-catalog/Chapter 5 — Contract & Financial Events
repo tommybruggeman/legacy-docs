@@ -1,0 +1,698 @@
+---
+title: Contract and Financial Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/08-Contract.md
+  - ../domain-model/15-Dead-Cap-Obligation.md
+  - ../domain-model/16-Team-Option.md
+  - ../domain-model/04-Franchise.md
+  - ../rulebook/financial-rules.md
+---
+
+# Contract and Financial Events
+
+## Purpose
+
+This chapter defines every canonical event that changes the financial state of a League.
+
+Unlike ownership events, which determine who controls a Player, financial events determine the contractual obligations attached to that Player.
+
+Financial events establish:
+
+- Salary obligations
+- Contract duration
+- Dead cap liabilities
+- Future commitments
+- Salary cap availability
+- Free agency eligibility
+- Team options
+- Contract restructures
+- Contract extensions
+
+These events collectively define the financial history of every Franchise.
+
+---
+
+# Guiding Principle
+
+Contracts create obligations.
+
+Obligations create cap space.
+
+Cap space creates legal transaction boundaries.
+
+Legacy never calculates financial state from snapshots.
+
+Financial state is reconstructed from immutable events.
+
+---
+
+# Financial Model
+
+```text
+Contract
+        │
+creates
+        ▼
+Salary Obligation
+        │
+affects
+        ▼
+Cap Space
+        │
+limits
+        ▼
+Legal Transactions
+```
+
+---
+
+# Financial Lifecycle
+
+```text
+ContractCreated
+        │
+        ▼
+ContractSalaryChanged
+        │
+        ▼
+ContractExtended
+        │
+        ▼
+ContractRestructured
+        │
+        ▼
+ContractYearReduced
+        │
+        ▼
+ContractExpired
+        │
+        ▼
+ContractTerminated
+        │
+        ▼
+DeadCapObligationCreated
+        │
+        ▼
+DeadCapObligationReduced
+        │
+        ▼
+DeadCapObligationSatisfied
+```
+
+---
+
+# Scope
+
+This chapter defines:
+
+- ContractCreated
+- ContractSalaryChanged
+- ContractExtended
+- ContractRestructured
+- ContractYearReduced
+- ContractExpired
+- ContractTerminated
+
+- DeadCapObligationCreated
+- DeadCapObligationReduced
+- DeadCapObligationSatisfied
+
+- TeamOptionCreated
+- TeamOptionExercised
+- TeamOptionDeclined
+- TeamOptionExpired
+
+---
+
+# Financial State Model
+
+Legacy separates financial state into four independent concepts.
+
+```text
+Contract
+```
+
+Represents the legal agreement.
+
+```text
+Salary
+```
+
+Represents current annual obligation.
+
+```text
+Dead Cap
+```
+
+Represents remaining financial obligation after termination.
+
+```text
+Future Commitment
+```
+
+Represents obligations that have not yet become current.
+
+---
+
+# General Invariants
+
+Every financial event shall satisfy:
+
+1. Every Contract belongs to exactly one Franchise.
+2. Every Contract references exactly one Player.
+3. Every Contract has one active financial state.
+4. Salary cannot become negative.
+5. Contract years cannot become negative.
+6. Dead Cap cannot exceed remaining obligation.
+7. Historical salaries never change.
+8. Historical cap calculations remain reproducible.
+9. Financial events are immutable.
+10. Every cap calculation must be reconstructable from event history.
+
+---
+
+# ContractCreated
+
+## Purpose
+
+Represents the creation of a new Player Contract.
+
+This establishes the initial financial obligation.
+
+---
+
+### Trigger
+
+CreateContract Command succeeds.
+
+---
+
+### Payload
+
+```json
+{
+  "contract_id": "uuid",
+  "player_id": "uuid",
+  "franchise_id": "uuid",
+  "salary": 28,
+  "years_remaining": 4,
+  "season": 2027
+}
+```
+
+---
+
+### Business Impact
+
+• Creates financial obligation
+
+• Reduces cap space
+
+• Establishes years remaining
+
+• Enables future extensions
+
+• Enables restructures
+
+• Enables dead cap calculations
+
+• Invalidates cap projections
+
+• Invalidates roster value calculations
+
+---
+
+### AI Interpretation
+
+The AI now knows:
+
+- current salary
+- contract length
+- future obligation
+- future free agency date
+
+---
+
+# ContractSalaryChanged
+
+## Purpose
+
+Represents a modification to annual salary without replacing the Contract.
+
+---
+
+### Business Impact
+
+• Changes annual cap hit
+
+• Changes future cap projections
+
+• Alters affordability
+
+• Alters financial flexibility
+
+• Invalidates salary calculations
+
+• Invalidates cap calculations
+
+---
+
+# ContractExtended
+
+## Purpose
+
+Adds additional years to an existing Contract.
+
+---
+
+### Business Impact
+
+• Increases years remaining
+
+• Delays free agency
+
+• Changes future cap obligations
+
+• Alters roster stability
+
+• Alters competitive window
+
+• AI recalculates long-term planning
+
+---
+
+# ContractRestructured
+
+## Purpose
+
+Represents redistribution of financial obligations while preserving the Contract.
+
+---
+
+### Business Impact
+
+• Salary distribution changes
+
+• Future obligations change
+
+• Dead cap projections change
+
+• Current cap flexibility changes
+
+• Long-term flexibility changes
+
+---
+
+# ContractYearReduced
+
+## Purpose
+
+Occurs automatically during annual rollover.
+
+---
+
+### Trigger
+
+SeasonRolloverCompleted
+
+---
+
+### Business Impact
+
+• Years remaining decreases
+
+• Future FA approaches
+
+• Future obligation shortens
+
+• AI recalculates timelines
+
+---
+
+# ContractExpired
+
+## Purpose
+
+Represents the natural completion of a Contract.
+
+---
+
+### Business Impact
+
+• Financial obligation ends
+
+• Player eligible for Free Agency
+
+• Cap space increases
+
+• Future obligation removed
+
+• Invalidates FA projections
+
+---
+
+# ContractTerminated
+
+## Purpose
+
+Represents termination before expiration.
+
+---
+
+### Business Impact
+
+• Contract ends immediately
+
+• Dead Cap created
+
+• Player removed
+
+• Cap recalculated
+
+• Future obligation recalculated
+
+---
+
+# DeadCapObligationCreated
+
+## Purpose
+
+Represents creation of remaining financial liability after termination.
+
+---
+
+### Business Impact
+
+• Creates dead cap
+
+• Reduces available cap
+
+• Persists across seasons
+
+• Changes financial flexibility
+
+• Invalidates cap projections
+
+---
+
+# DeadCapObligationReduced
+
+## Purpose
+
+Represents annual reduction of dead cap.
+
+---
+
+### Business Impact
+
+• Increases cap flexibility
+
+• Reduces obligation
+
+• Improves financial outlook
+
+---
+
+# DeadCapObligationSatisfied
+
+## Purpose
+
+Represents complete elimination of dead cap.
+
+---
+
+### Business Impact
+
+• Removes financial liability
+
+• Fully restores cap flexibility
+
+• Removes future obligation
+
+---
+
+# TeamOptionCreated
+
+## Purpose
+
+Creates optional future Contract decision.
+
+---
+
+### Business Impact
+
+• Creates conditional obligation
+
+• Delays FA certainty
+
+• Adds strategic flexibility
+
+• AI evaluates option value
+
+---
+
+# TeamOptionExercised
+
+## Purpose
+
+Team elects to execute option.
+
+---
+
+### Business Impact
+
+• Extends Contract
+
+• Creates future salary
+
+• Alters cap
+
+• Delays free agency
+
+---
+
+# TeamOptionDeclined
+
+## Purpose
+
+Team elects not to execute option.
+
+---
+
+### Business Impact
+
+• Player remains on existing deal
+
+• Future FA unchanged
+
+• Removes optional pathway
+
+---
+
+# TeamOptionExpired
+
+## Purpose
+
+Represents unused option reaching expiration.
+
+---
+
+### Business Impact
+
+• Removes optional extension
+
+• Player follows existing Contract
+
+• AI removes future branch
+
+---
+
+# Financial Workflow Examples
+
+## Rookie Draft
+
+```text
+RosterAssignmentCreated
+
+↓
+
+ContractCreated
+```
+
+---
+
+## Extension
+
+```text
+ContractCreated
+
+↓
+
+ContractExtended
+```
+
+---
+
+## Annual Rollover
+
+```text
+SeasonRolloverCompleted
+
+↓
+
+ContractYearReduced
+```
+
+---
+
+## Release
+
+```text
+PlayerReleased
+
+↓
+
+ContractTerminated
+
+↓
+
+DeadCapObligationCreated
+```
+
+---
+
+## Dead Cap
+
+```text
+DeadCapCreated
+
+↓
+
+DeadCapReduced
+
+↓
+
+DeadCapSatisfied
+```
+
+---
+
+## Team Option
+
+```text
+TeamOptionCreated
+
+↓
+
+TeamOptionExercised
+```
+
+or
+
+```text
+TeamOptionDeclined
+```
+
+or
+
+```text
+TeamOptionExpired
+```
+
+---
+
+# Financial Calculations
+
+Legacy derives every financial calculation from event history.
+
+Examples include:
+
+- Current Cap Space
+
+- Future Cap Space
+
+- Total Payroll
+
+- Dead Cap
+
+- Future Commitments
+
+- Average Contract Value
+
+- Years Under Contract
+
+- Free Agent Forecast
+
+No financial calculation should require hidden mutable state.
+
+---
+
+# AI Interpretation
+
+Financial events provide authoritative evidence regarding:
+
+- Current salary
+
+- Remaining contract
+
+- Financial flexibility
+
+- Dead cap
+
+- Cap legality
+
+- Future obligations
+
+- Contract timelines
+
+- Free agency timing
+
+- Competitive window
+
+The AI shall never estimate financial obligations when authoritative events exist.
+
+---
+
+# Validation Checklist
+
+Before publishing financial events verify:
+
+✓ Contract exists
+
+✓ Player exists
+
+✓ Franchise exists
+
+✓ Salary valid
+
+✓ Years remaining valid
+
+✓ Dead cap valid
+
+✓ Season valid
+
+✓ Financial history preserved
+
+✓ Event ordering maintained
+
+✓ Historical cap reproducible
+
+---
+
+# Final Principle
+
+Contracts are the financial memory of a Franchise.
+
+Ownership determines who controls a Player.
+
+Contracts determine what that ownership costs.
+
+Every salary-cap calculation, every free-agent forecast, every contender evaluation, and every long-term recommendation produced by Legacy ultimately traces back to the immutable financial events defined in this chapter.
+
+If the ownership model defines **who has the right to compete**, the financial model defines **what that right is worth**.
