@@ -1,0 +1,330 @@
+---
+title: Draft Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/10-Draft-Pick.md
+  - ../domain-model/11-Rookie-Draft.md
+  - ../domain-model/12-Draft-Selection.md
+  - ../domain-model/04-Franchise.md
+  - ../rulebook/draft-rules.md
+---
+
+# Draft Events
+
+## Purpose
+
+This chapter defines every canonical event governing draft assets and rookie drafts.
+
+Draft Picks are unique assets because they represent future ownership rather than current ownership.
+
+Unlike Players, Draft Picks are entirely virtual until exercised.
+
+Legacy treats Draft Picks as first-class assets that may be traded, valued, projected, and analyzed years before they become Players.
+
+---
+
+# Guiding Principle
+
+Draft Picks are assets.
+
+Draft Selections consume Draft Picks.
+
+Players are created through Draft Selections.
+
+Ownership begins with Draft Picks.
+
+---
+
+# Draft Asset Model
+
+```text
+Draft Pick
+        │
+owned by
+        ▼
+Franchise
+        │
+used during
+        ▼
+Rookie Draft
+        │
+creates
+        ▼
+Draft Selection
+        │
+creates
+        ▼
+Roster Assignment
+```
+
+---
+
+# Draft Lifecycle
+
+```text
+RookieDraftCreated
+        │
+        ▼
+DraftStarted
+        │
+        ▼
+DraftSelectionMade
+        │
+        ▼
+DraftCompleted
+```
+
+---
+
+# Draft Pick Lifecycle
+
+```text
+DraftPickCreated
+        │
+        ▼
+DraftPickTransferred
+        │
+        ▼
+DraftPickSplit*
+        │
+        ▼
+DraftPickMerged*
+        │
+        ▼
+DraftSelectionMade
+        │
+        ▼
+DraftPickConsumed
+```
+
+*Optional depending on League Rules.
+
+---
+
+# Scope
+
+This chapter defines:
+
+- RookieDraftCreated
+- RookieDraftStarted
+- RookieDraftPaused
+- RookieDraftResumed
+- RookieDraftCompleted
+
+- DraftPickCreated
+- DraftPickTransferred
+- DraftPickForfeited
+- DraftPickConsumed
+
+- DraftSelectionMade
+- DraftSelectionCorrected
+
+---
+
+# General Invariants
+
+Every draft event shall satisfy:
+
+1. Every Draft Pick belongs to exactly one Franchise.
+2. A Draft Pick may only be consumed once.
+3. Draft order must remain deterministic.
+4. Draft Picks remain tradable until consumed.
+5. Every Draft Selection references one Draft Pick.
+6. Every Draft Selection creates exactly one Player acquisition.
+7. Historical draft order is immutable.
+8. Historical selections never change.
+
+---
+
+# RookieDraftCreated
+
+## Purpose
+
+Creates a new Rookie Draft for a League Season.
+
+---
+
+### Business Impact
+
+• Creates draft schedule
+
+• Creates draft order
+
+• Enables future selections
+
+• Enables draft trading
+
+• AI generates rookie projections
+
+---
+
+# RookieDraftStarted
+
+Purpose
+
+Opens draft for live selections.
+
+---
+
+Business Impact
+
+• Picks become active
+
+• Draft timers begin
+
+• Trading rules may change
+
+---
+
+# RookieDraftPaused
+
+Purpose
+
+Temporarily suspends draft.
+
+---
+
+Business Impact
+
+• Stops timers
+
+• Freezes pick advancement
+
+---
+
+# RookieDraftResumed
+
+Purpose
+
+Continues paused draft.
+
+---
+
+Business Impact
+
+• Timers resume
+
+• Draft continues
+
+---
+
+# RookieDraftCompleted
+
+Purpose
+
+Represents completion of the Rookie Draft.
+
+---
+
+Business Impact
+
+• Remaining picks expire
+
+• Rookies now owned
+
+• Future draft created
+
+• League projections update
+
+---
+
+# DraftPickCreated
+
+Purpose
+
+Creates a future Draft Pick.
+
+---
+
+Business Impact
+
+• Creates tradable asset
+
+• Appears in Franchise inventory
+
+• AI values future asset
+
+---
+
+# DraftPickTransferred
+
+Purpose
+
+Transfers ownership of a Draft Pick.
+
+---
+
+Business Impact
+
+• Changes draft capital
+
+• Changes future roster outlook
+
+• Alters rebuilding timeline
+
+• Alters contender timeline
+
+• Invalidates trade values
+
+---
+
+# DraftPickForfeited
+
+Purpose
+
+Represents loss of draft asset due to League Rules.
+
+---
+
+Business Impact
+
+• Removes draft capital
+
+• Updates draft order
+
+• AI removes future asset
+
+---
+
+# DraftSelectionMade
+
+Purpose
+
+Consumes a Draft Pick to acquire a Player.
+
+---
+
+Business Impact
+
+• Consumes Draft Pick
+
+• Creates Roster Assignment
+
+• Creates Contract
+
+• Adds Player ownership
+
+• Updates rookie rankings
+
+• Updates League evaluations
+
+---
+
+# DraftSelectionCorrected
+
+Purpose
+
+Corrects administrative draft errors.
+
+---
+
+Business Impact
+
+• Updates historical record
+
+• Maintains audit
