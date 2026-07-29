@@ -1,0 +1,556 @@
+# Chapter 7 — Trade Events
+
+---
+title: Trade Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/13-Trade.md
+  - ../domain-model/14-Trade-Asset.md
+  - ../domain-model/08-Contract.md
+  - ../domain-model/09-Roster-Assignment.md
+  - ../domain-model/10-Draft-Pick.md
+  - ../rulebook/trade-rules.md
+---
+
+# Trade Events
+
+## Purpose
+
+This chapter defines the canonical events governing the proposal, negotiation, execution, modification, cancellation, and completion of trades within a League.
+
+Unlike Drafts or Free Agency, Trades are multi-asset transactions between two or more Franchises. A single Trade may involve Players, Contracts, Draft Picks, salary considerations, or future conditional assets.
+
+The Trade itself is not the movement of assets.
+
+The Trade authorizes the movement of assets.
+
+Ownership changes occur through the events emitted during Trade execution.
+
+---
+
+# Guiding Principle
+
+Trades negotiate intent.
+
+Trade execution moves assets.
+
+Ownership changes through ownership events.
+
+Financial changes through contract events.
+
+A Trade coordinates multiple state changes but owns none of them directly.
+
+---
+
+# Trade Model
+
+```text
+Trade
+      │
+contains
+      ▼
+Trade Assets
+      │
+may reference
+      ├───────────────┐
+      ▼               ▼
+Player         Draft Pick
+      │               │
+      └──────┬────────┘
+             ▼
+       Trade Executed
+             │
+             ▼
+Ownership Events
+
+Financial Events
+```
+
+A Trade is a coordination aggregate.
+
+The Trade itself never owns Players, Contracts, or Draft Picks.
+
+It references them.
+
+---
+
+# Trade Lifecycle
+
+```text
+TradeProposed
+        │
+        ▼
+TradeModified (optional)
+        │
+        ▼
+TradeAccepted
+        │
+        ▼
+TradeValidated
+        │
+        ▼
+TradeExecuted
+        │
+        ▼
+TradeCompleted
+```
+
+Alternative paths:
+
+```text
+TradeProposed
+
+↓
+
+TradeRejected
+```
+
+or
+
+```text
+TradeProposed
+
+↓
+
+TradeCancelled
+```
+
+or
+
+```text
+TradeProposed
+
+↓
+
+TradeExpired
+```
+
+---
+
+# Scope
+
+This chapter defines:
+
+- TradeProposed
+- TradeModified
+- TradeAccepted
+- TradeRejected
+- TradeCancelled
+- TradeExpired
+- TradeValidated
+- TradeExecutionStarted
+- TradeExecuted
+- TradeCompleted
+- TradeExecutionFailed
+
+---
+
+# General Invariants
+
+Every Trade shall satisfy:
+
+1. Every Trade has at least two participating Franchises.
+2. Every Trade Asset belongs to exactly one Franchise prior to execution.
+3. Every Trade Asset may appear only once within a Trade.
+4. Trades must satisfy League Rules before execution.
+5. Trade validation precedes execution.
+6. Trade execution is atomic.
+7. Either every asset moves or none do.
+8. Historical Trades are immutable.
+9. Trade execution never directly edits historical events.
+10. Asset ownership changes are emitted by their owning aggregates.
+
+---
+
+# TradeProposed
+
+## Purpose
+
+Represents the creation of a proposed Trade between participating Franchises.
+
+### Trigger
+
+A Franchise submits a Trade offer.
+
+### Business Impact
+
+• Creates pending Trade
+
+• Locks proposal snapshot
+
+• Enables negotiation
+
+• Starts Trade lifecycle
+
+• AI evaluates fairness
+
+### AI Interpretation
+
+The AI may immediately evaluate:
+
+- Fairness
+- Cap implications
+- Competitive balance
+- Risk
+- Future value
+
+without affecting League state.
+
+---
+
+# TradeModified
+
+## Purpose
+
+Represents modification of a pending Trade proposal before acceptance.
+
+### Business Impact
+
+• Updates Trade Assets
+
+• Resets validation
+
+• Invalidates previous evaluations
+
+• Requires new AI analysis
+
+---
+
+# TradeAccepted
+
+## Purpose
+
+Represents agreement by all required parties.
+
+### Business Impact
+
+• Locks Trade contents
+
+• Enables validation
+
+• Prevents unauthorized modification
+
+---
+
+# TradeRejected
+
+## Purpose
+
+Represents explicit rejection of a Trade proposal.
+
+### Business Impact
+
+• Ends negotiation
+
+• Releases proposal
+
+• No asset movement occurs
+
+---
+
+# TradeCancelled
+
+## Purpose
+
+Represents withdrawal of a pending Trade before execution.
+
+### Business Impact
+
+• Terminates proposal
+
+• Releases Trade
+
+• Restores negotiation freedom
+
+---
+
+# TradeExpired
+
+## Purpose
+
+Represents expiration of a Trade proposal due to time limits or League Rules.
+
+### Business Impact
+
+• Removes pending proposal
+
+• Requires new Trade if negotiations continue
+
+---
+
+# TradeValidated
+
+## Purpose
+
+Represents successful verification that the proposed Trade satisfies all League Rules.
+
+### Validation includes
+
+- Salary Cap
+- Roster Limits
+- Contract Rules
+- Draft Pick ownership
+- Player ownership
+- League restrictions
+
+### Business Impact
+
+• Confirms legality
+
+• Authorizes execution
+
+• Freezes validation state
+
+---
+
+# TradeExecutionStarted
+
+## Purpose
+
+Represents the beginning of atomic Trade execution.
+
+### Business Impact
+
+• Begins coordinated asset movement
+
+• Prevents concurrent modification
+
+• Creates execution transaction
+
+---
+
+# TradeExecuted
+
+## Purpose
+
+Represents successful execution of every asset movement authorized by the Trade.
+
+### Business Impact
+
+• Transfers Players
+
+• Transfers Contracts
+
+• Transfers Draft Picks
+
+• Recalculates cap
+
+• Recalculates roster state
+
+• Recalculates League standings
+
+• Invalidates franchise evaluations
+
+• Invalidates League evaluations
+
+### AI Interpretation
+
+This is one of the highest-impact events in Legacy because multiple deterministic state changes occur simultaneously.
+
+---
+
+# TradeCompleted
+
+## Purpose
+
+Represents successful completion of every operation associated with Trade execution.
+
+### Business Impact
+
+• Finalizes Trade
+
+• Releases execution locks
+
+• Enables historical audit
+
+• Enables downstream projections
+
+---
+
+# TradeExecutionFailed
+
+## Purpose
+
+Represents failure during Trade execution.
+
+### Business Impact
+
+• Rolls back partial execution
+
+• Preserves previous ownership
+
+• Preserves financial state
+
+• Generates audit record
+
+• Prevents inconsistent League state
+
+---
+
+# Workflow Examples
+
+## Successful Trade
+
+```text
+TradeProposed
+
+↓
+
+TradeAccepted
+
+↓
+
+TradeValidated
+
+↓
+
+TradeExecutionStarted
+
+↓
+
+TradeExecuted
+
+↓
+
+TradeCompleted
+```
+
+---
+
+## Rejected Trade
+
+```text
+TradeProposed
+
+↓
+
+TradeRejected
+```
+
+---
+
+## Cancelled Trade
+
+```text
+TradeProposed
+
+↓
+
+TradeCancelled
+```
+
+---
+
+## Failed Execution
+
+```text
+TradeProposed
+
+↓
+
+TradeAccepted
+
+↓
+
+TradeValidated
+
+↓
+
+TradeExecutionStarted
+
+↓
+
+TradeExecutionFailed
+```
+
+---
+
+# Downstream Events
+
+Trade execution authorizes—but does not directly perform—the following events:
+
+```text
+RosterAssignmentTransferred
+
+ContractTransferred
+
+DraftPickTransferred
+
+DeadCapObligationCreated (optional)
+
+TeamEvaluationUpdated
+
+LeagueEvaluationUpdated
+```
+
+These events are emitted by their respective aggregates.
+
+---
+
+# AI Interpretation
+
+Trade events provide authoritative evidence regarding:
+
+- Trade history
+- Franchise strategy
+- Asset valuation
+- Market behavior
+- Negotiation patterns
+- Competitive windows
+- Future flexibility
+- League balance
+
+The AI shall distinguish between:
+
+- Proposed Trades
+- Accepted Trades
+- Executed Trades
+
+Only executed Trades may affect deterministic League state.
+
+---
+
+# Validation Checklist
+
+Before publishing Trade events verify:
+
+✓ Trade exists
+
+✓ Participating Franchises exist
+
+✓ Assets exist
+
+✓ Asset ownership verified
+
+✓ League Rules satisfied
+
+✓ Salary Cap valid
+
+✓ Draft Picks valid
+
+✓ Trade atomicity preserved
+
+✓ Historical audit preserved
+
+✓ Event ordering deterministic
+
+---
+
+# Final Principle
+
+Trades do not move Players.
+
+Trades authorize the coordinated movement of League assets.
+
+Player ownership changes through Ownership Events.
+
+Financial obligations change through Contract Events.
+
+Draft capital changes through Draft Events.
+
+The Trade serves as the deterministic coordinator that guarantees every asset movement succeeds together or fails together, preserving the integrity of League state.
