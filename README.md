@@ -1,34 +1,32 @@
-# Legacy Documentation
+# Legacy
 
-> **The architectural specification for Legacy — a deterministic fantasy football operating system.**
+> **The canonical architectural specification for the Legacy Fantasy Football Platform.**
 
 ---
 
-# Overview
+## Vision
 
-Legacy is designed to be more than a fantasy football application.
+Legacy is being designed as the definitive operating system for advanced dynasty fantasy football leagues.
 
-It is a complete operating system for dynasty leagues with support for:
+Rather than treating a league as a collection of disconnected pages, Legacy models every aspect of league management as a deterministic software platform capable of supporting:
 
-- Salary Caps
-- Multi-Year Contracts
-- Dead Cap
-- Draft Pick Ownership
-- League Rule Enforcement
-- Season Rollover
-- Historical League State
-- AI-Assisted General Management
-- Deterministic Decision Making
+- Multi-year player contracts
+- Salary caps
+- Dead cap accounting
+- Draft asset ownership
+- Rule enforcement
+- Historical league state
+- AI-assisted general management
+- Recoverable operations
+- Long-term league evolution
 
-This repository serves as the canonical architectural specification for the Legacy platform.
-
-It documents how every subsystem works, how they interact, and the engineering principles that guide future development.
+The goal is to build a platform that commissioners trust, managers enjoy using, and engineers can confidently extend for years to come.
 
 ---
 
 # Guiding Philosophy
 
-Legacy is built around one central principle:
+Legacy is built around one fundamental principle:
 
 > **Business truth belongs to deterministic application logic. AI exists to explain that truth—not create it.**
 
@@ -36,54 +34,96 @@ Every architectural decision in this repository reinforces that philosophy.
 
 ---
 
-# Architecture Overview
+# Architectural Principles
 
-```text
-                          Legacy Platform
+The platform is designed around several non-negotiable principles.
 
-                                 │
-                                 ▼
-                        System Architecture
-                                 │
-      ┌───────────────┬──────────────┬──────────────┐
-      ▼               ▼              ▼              ▼
- Domain Model     Rulebook      Runtime Systems   AI Systems
-      │               │              │              │
-      ▼               ▼              ▼              ▼
- Players       League Rules    Event Engine     GM Assistant
- Contracts     Salary Rules    Validation       Query Engine
- Draft Picks   Trade Rules     Snapshots        Evaluations
- Teams          Rollover        Recovery         OpenAI
-```
+- Deterministic business logic
+- Explicit subsystem ownership
+- Layered architecture
+- Event-driven execution
+- Validation before persistence
+- Immutable historical state
+- Recoverability through Snapshots
+- Explainable AI
+- Defense-in-depth security
+- Operational reliability
 
 ---
 
 # Repository Structure
 
-| Folder | Purpose |
-|---------|---------|
-| `system-architecture` | Platform-wide architecture and subsystem relationships |
-| `domain-model` | Canonical business entities and relationships |
-| `rulebook` | League rules and business policies |
-| `event-catalog` | Definitions of every supported platform event |
-| `event-engine` | Deterministic event execution engine |
-| `validation-framework` | Validation rules, execution, and decisions |
-| `snapshot-system` | Immutable state checkpoints |
-| `recovery-engine` | Failure recovery and rollback planning |
-| `admin-tools` | Operational dashboards and administrative workflows |
-| `integration` | Contracts and subsystem communication |
-| `AI-Architecture` | GM Assistant reasoning and conversational AI |
+```text
+Legacy
+
+├── AI-Architecture/
+├── admin-tools/
+├── domain-model/
+├── event-catalog/
+├── event-engine/
+├── integration/
+├── recovery-engine/
+├── rulebook/
+├── snapshot-system/
+├── system-architecture/
+├── validation-framework/
+└── README.md
+```
+
+Each directory represents one canonical subsystem of the platform.
+
+Responsibilities do not overlap.
 
 ---
 
-# Platform Layers
+# Documentation Overview
+
+| Documentation | Purpose |
+|--------------|---------|
+| **System Architecture** | Platform structure, ownership, and runtime design |
+| **Domain Model** | Business entities and relationships |
+| **Rulebook** | League rules and deterministic business policies |
+| **Event Catalog** | Canonical business events |
+| **Event Engine** | Event execution pipeline |
+| **Validation Framework** | State validation and business rule enforcement |
+| **Snapshot System** | Immutable league state preservation |
+| **Recovery Engine** | Failure recovery and rollback |
+| **Admin Tools** | Operational and commissioner tooling |
+| **Integration** | Cross-system communication contracts |
+| **AI Architecture** | GM Assistant reasoning and conversational architecture |
+
+---
+
+# Recommended Reading Order
+
+Developers new to the project should read the documentation in the following order.
+
+1. System Architecture
+2. Domain Model
+3. Rulebook
+4. Event Catalog
+5. Event Engine
+6. Validation Framework
+7. Snapshot System
+8. Recovery Engine
+9. Admin Tools
+10. Integration
+11. AI Architecture
+
+This sequence progresses from platform concepts to implementation-specific systems.
+
+---
+
+# Platform Architecture
+
+At a high level, Legacy follows a layered architecture.
 
 ```text
 Presentation
 
 ↓
 
-Application
+Application Services
 
 ↓
 
@@ -106,101 +146,48 @@ Persistence
 Infrastructure
 ```
 
-Each layer owns a specific responsibility and communicates through explicit interfaces.
+Every layer has explicit ownership and communicates through defined interfaces.
 
 ---
 
-# Core Design Principles
+# AI Philosophy
 
-Legacy follows several non-negotiable architectural principles.
+Legacy intentionally separates business reasoning from conversational reasoning.
 
-## Deterministic Business Logic
+```text
+User Question
 
-Business decisions must produce identical results for identical inputs.
+↓
 
----
+Evidence Retrieval
 
-## Explicit Ownership
+↓
 
-Every subsystem owns one domain.
+Deterministic Analysis
 
-Ownership never overlaps.
+↓
 
----
+Decision
 
-## Immutable History
+↓
 
-Historical state should never be silently overwritten.
+OpenAI Explanation
 
----
+↓
 
-## Event-Driven Execution
+Response
+```
 
-Complex workflows execute through ordered events with explicit dependencies.
+The platform determines what is true.
 
----
-
-## Validation Everywhere
-
-Validation protects every important state transition.
-
----
-
-## Safe Recovery
-
-Every important operation can recover from failure through immutable Snapshots.
-
----
-
-## Explainable AI
-
-OpenAI generates explanations.
-
-Legacy determines conclusions.
-
----
-
-# Documentation Reading Order
-
-New contributors should read the documentation in the following order:
-
-1. System Architecture
-2. Domain Model
-3. Rulebook
-4. Event Catalog
-5. Event Engine
-6. Validation Framework
-7. Snapshot System
-8. Recovery Engine
-9. Admin Tools
-10. Integration
-11. AI Architecture
-
-This sequence moves from platform concepts toward implementation details.
-
----
-
-# Architectural Goals
-
-Legacy aims to be:
-
-- Deterministic
-- Explainable
-- Recoverable
-- Auditable
-- Extensible
-- Secure
-- AI-Assisted
-- League-Aware
-
-These goals guide every architectural decision within the platform.
+AI determines how to explain it.
 
 ---
 
 # Documentation Status
 
-| Subsystem | Status |
-|-----------|--------|
+| Area | Status |
+|------|--------|
 | System Architecture | ✅ Complete |
 | Domain Model | ✅ Complete |
 | Rulebook | ✅ Complete |
@@ -215,44 +202,62 @@ These goals guide every architectural decision within the platform.
 
 ---
 
+# Architecture Status
+
+The Legacy architecture is considered **Version 1.0**.
+
+The platform's foundational architecture is complete and serves as the canonical reference for all future implementation.
+
+Future work should primarily involve:
+
+- Service implementation
+- Database evolution
+- Event execution
+- Validation logic
+- AI capabilities
+- Testing
+- Performance
+- Operational maturity
+
+rather than introducing additional architectural subsystems.
+
+---
+
+# Architecture Freeze
+
+The documents in this repository represent the canonical architecture of the Legacy platform.
+
+Future architectural changes should:
+
+- Update existing documentation.
+- Preserve subsystem ownership.
+- Avoid duplicate specifications.
+- Maintain deterministic behavior.
+- Document significant changes through Architecture Decision Records (ADRs).
+
+The goal is to evolve the platform without fragmenting its architectural foundation.
+
+---
+
 # Intended Audience
 
 This repository is intended for:
 
-- Platform Engineers
-- Backend Developers
-- Frontend Developers
-- Commissioners
-- Technical Contributors
-- Future Maintainers
+- Software Engineers
+- Platform Architects
 - AI Engineers
+- Contributors
+- Future Maintainers
+- Commissioners interested in platform design
 
-It is not end-user documentation.
-
----
-
-# Future Evolution
-
-Legacy has been intentionally designed so new capabilities can be introduced without restructuring the existing platform.
-
-Examples include:
-
-- Simulation Engine
-- Dynasty Rankings
-- Trade Market Engine
-- Startup Draft Generator
-- Salary Optimization
-- League Analytics
-- Mobile Applications
-- Public API
-- Additional AI Assistants
-
-The architecture should evolve through documented subsystem ownership and explicit integration contracts.
+It is not intended to serve as end-user documentation.
 
 ---
 
-# Repository Vision
+# Long-Term Vision
 
-Legacy is intended to become the definitive operating system for advanced fantasy football leagues.
+Legacy is designed to become the premier operating system for advanced fantasy football leagues.
 
-This documentation establishes the architectural foundation required to build, maintain, and evolve the platform for years to come while preserving deterministic behavior, operational reliability, and explainable AI-assisted decision making.
+Every architectural decision documented here supports that objective by emphasizing determinism, recoverability, explainability, extensibility, and long-term maintainability.
+
+As implementation progresses, this repository will remain the single source of truth for how the platform is intended to evolve.
