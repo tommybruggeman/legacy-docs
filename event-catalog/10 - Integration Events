@@ -1,0 +1,673 @@
+# Chapter 10 — Integration Events
+
+---
+title: Integration Events
+document: Event Catalog
+version: 1.0.0-draft
+status: Draft
+author: Legacy Product Architecture
+last_updated: 2026-07-28
+depends_on:
+  - README.md
+  - ../domain-model/01-League.md
+  - ../ai-architecture/README.md
+  - ../rulebook/README.md
+---
+
+# Integration Events
+
+## Purpose
+
+This chapter defines the canonical events governing communication between Legacy and external systems.
+
+Unlike Business Events, which represent authoritative League state, Integration Events describe the controlled exchange of information between Legacy and outside services.
+
+These services may include:
+
+- Fantasy platforms (Sleeper, ESPN, Yahoo)
+- Authentication providers
+- Payment providers
+- Notification services
+- Artificial Intelligence providers
+- Public APIs
+- Internal microservices
+- Future third-party integrations
+
+Integration Events never directly modify League state.
+
+Every accepted external change must first become a validated Business Event.
+
+---
+
+# Guiding Principle
+
+External systems provide information.
+
+Legacy validates information.
+
+Legacy creates Business Events.
+
+Business Events change League state.
+
+External systems are consumers and producers of messages—not owners of League state.
+
+---
+
+# Integration Model
+
+```text
+External System
+        │
+        ▼
+Integration Event
+        │
+Validation
+        │
+        ▼
+Command
+        │
+        ▼
+Business Event
+        │
+        ▼
+League State
+```
+
+Outgoing communication follows the reverse path.
+
+```text
+Business Event
+        │
+        ▼
+Integration Event
+        │
+        ▼
+External System
+```
+
+---
+
+# Scope
+
+This chapter defines:
+
+- ExternalDataReceived
+- ExternalSynchronizationStarted
+- ExternalSynchronizationCompleted
+- ExternalSynchronizationFailed
+
+- AuthenticationSucceeded
+- AuthenticationFailed
+
+- NotificationQueued
+- NotificationDelivered
+- NotificationFailed
+
+- PaymentReceived
+- SubscriptionActivated
+- SubscriptionCancelled
+
+- AIRequestSubmitted
+- AIResponseReceived
+- AIResponseRejected
+
+- WebhookReceived
+- WebhookProcessed
+- WebhookRejected
+
+---
+
+# General Invariants
+
+Every Integration Event shall satisfy:
+
+1. External systems never directly modify League state.
+2. Every inbound message is validated.
+3. Invalid messages are rejected.
+4. Every accepted message produces deterministic Business Events.
+5. Every outbound message references an existing Business Event.
+6. Integration failures never corrupt League state.
+7. External retries are idempotent.
+8. Integration history is auditable.
+9. Provider-specific payloads remain isolated.
+10. League state is never dependent upon provider availability.
+
+---
+
+# ExternalDataReceived
+
+## Purpose
+
+Represents receipt of data from an external system.
+
+Examples include:
+
+- Sleeper roster updates
+- Sleeper player metadata
+- ESPN league imports
+- Yahoo imports
+
+### Business Impact
+
+• Creates integration record
+
+• Begins validation
+
+• Does not modify League state
+
+---
+
+# ExternalSynchronizationStarted
+
+## Purpose
+
+Represents the beginning of an external synchronization operation.
+
+### Business Impact
+
+• Begins synchronization
+
+• Creates synchronization transaction
+
+• Tracks synchronization status
+
+---
+
+# ExternalSynchronizationCompleted
+
+## Purpose
+
+Represents successful completion of synchronization.
+
+### Business Impact
+
+• Updates synchronization history
+
+• Enables downstream processing
+
+• May emit Business Events
+
+---
+
+# ExternalSynchronizationFailed
+
+## Purpose
+
+Represents unsuccessful synchronization.
+
+### Business Impact
+
+• Preserves previous League state
+
+• Records failure reason
+
+• Enables retry
+
+---
+
+# AuthenticationSucceeded
+
+## Purpose
+
+Represents successful identity verification through an authentication provider.
+
+Examples:
+
+- Supabase Auth
+- OAuth
+- Email Login
+- Passkeys
+
+### Business Impact
+
+• Authenticates User
+
+• Enables session creation
+
+• Does not modify League state
+
+---
+
+# AuthenticationFailed
+
+## Purpose
+
+Represents unsuccessful authentication.
+
+### Business Impact
+
+• Records failure
+
+• Prevents unauthorized access
+
+---
+
+# NotificationQueued
+
+## Purpose
+
+Represents scheduling of an outbound notification.
+
+Examples:
+
+- Trade notification
+
+- League invitation
+
+- Waiver results
+
+- Weekly recap
+
+### Business Impact
+
+• Creates delivery request
+
+• Enables asynchronous delivery
+
+---
+
+# NotificationDelivered
+
+## Purpose
+
+Represents successful notification delivery.
+
+### Business Impact
+
+• Records delivery status
+
+• Enables notification history
+
+---
+
+# NotificationFailed
+
+## Purpose
+
+Represents unsuccessful delivery.
+
+### Business Impact
+
+• Records failure
+
+• Enables retry
+
+---
+
+# PaymentReceived
+
+## Purpose
+
+Represents successful receipt of payment.
+
+Examples:
+
+- League subscription
+
+- Premium membership
+
+- Marketplace purchase
+
+### Business Impact
+
+• Records financial transaction
+
+• Enables subscription processing
+
+• Does not directly activate features
+
+---
+
+# SubscriptionActivated
+
+## Purpose
+
+Represents activation of subscription benefits.
+
+### Business Impact
+
+• Grants product access
+
+• Updates subscription state
+
+---
+
+# SubscriptionCancelled
+
+## Purpose
+
+Represents cancellation of an active subscription.
+
+### Business Impact
+
+• Updates subscription lifecycle
+
+• Schedules feature expiration
+
+---
+
+# AIRequestSubmitted
+
+## Purpose
+
+Represents submission of an AI reasoning request.
+
+Examples:
+
+- Trade evaluation
+
+- Player evaluation
+
+- Team strategy
+
+- Cap analysis
+
+### Business Impact
+
+• Creates AI request record
+
+• Associates request with conversation
+
+• Does not modify League state
+
+---
+
+# AIResponseReceived
+
+## Purpose
+
+Represents successful completion of AI reasoning.
+
+### Business Impact
+
+• Stores response
+
+• Associates explanation with deterministic evidence
+
+• Enables conversation continuity
+
+### AI Interpretation
+
+The AI response is advisory.
+
+It never becomes authoritative League state.
+
+---
+
+# AIResponseRejected
+
+## Purpose
+
+Represents rejection of an AI response due to validation failure.
+
+Examples:
+
+- Unsupported recommendation
+
+- Hallucinated player
+
+- Rule violation
+
+- Missing evidence
+
+### Business Impact
+
+• Discards invalid response
+
+• Preserves deterministic reasoning
+
+• Records validation outcome
+
+---
+
+# WebhookReceived
+
+## Purpose
+
+Represents receipt of an external webhook.
+
+Examples:
+
+- Payment provider
+
+- Authentication provider
+
+- Fantasy platform
+
+### Business Impact
+
+• Creates webhook record
+
+• Begins validation
+
+---
+
+# WebhookProcessed
+
+## Purpose
+
+Represents successful processing of a webhook.
+
+### Business Impact
+
+• Produces Business Events where appropriate
+
+• Updates integration history
+
+---
+
+# WebhookRejected
+
+## Purpose
+
+Represents rejection of an invalid webhook.
+
+### Business Impact
+
+• Preserves League integrity
+
+• Records rejection reason
+
+---
+
+# Workflow Examples
+
+## Sleeper Synchronization
+
+```text
+ExternalDataReceived
+
+↓
+
+ExternalSynchronizationStarted
+
+↓
+
+Validation
+
+↓
+
+Business Events
+
+↓
+
+ExternalSynchronizationCompleted
+```
+
+---
+
+## Authentication
+
+```text
+AuthenticationSucceeded
+
+↓
+
+Session Created
+
+↓
+
+User Access Granted
+```
+
+---
+
+## AI Request
+
+```text
+AIRequestSubmitted
+
+↓
+
+Evidence Built
+
+↓
+
+LLM Response
+
+↓
+
+Validation
+
+↓
+
+AIResponseReceived
+```
+
+or
+
+```text
+AIResponseRejected
+```
+
+---
+
+## Payment
+
+```text
+PaymentReceived
+
+↓
+
+SubscriptionActivated
+```
+
+---
+
+## Notification
+
+```text
+NotificationQueued
+
+↓
+
+NotificationDelivered
+```
+
+or
+
+```text
+NotificationFailed
+```
+
+---
+
+# Relationship to Other Chapters
+
+Integration Events never replace Business Events.
+
+Instead they initiate, observe, or communicate them.
+
+Examples include:
+
+```text
+ExternalDataReceived
+
+↓
+
+Command
+
+↓
+
+RosterAssignmentCreated
+
+↓
+
+ContractCreated
+
+↓
+
+AuditEventRecorded
+```
+
+The Business Events remain authoritative.
+
+The Integration Events merely facilitate communication between Legacy and external systems.
+
+---
+
+# AI Interpretation
+
+Integration Events provide authoritative evidence regarding:
+
+- Synchronization history
+
+- Provider health
+
+- Authentication status
+
+- Notification delivery
+
+- Subscription lifecycle
+
+- AI request history
+
+- External system reliability
+
+The AI shall never infer League state directly from external provider responses.
+
+Only validated Business Events constitute deterministic League truth.
+
+---
+
+# Validation Checklist
+
+Before publishing Integration Events verify:
+
+✓ Provider authenticated
+
+✓ Message integrity verified
+
+✓ Validation completed
+
+✓ Idempotency preserved
+
+✓ Business Events emitted correctly
+
+✓ Failures isolated
+
+✓ Audit history preserved
+
+✓ Retries deterministic
+
+✓ External payload archived
+
+✓ League state protected
+
+---
+
+# Final Principle
+
+Legacy is the system of record.
+
+External systems exchange information.
+
+Business Events define League state.
+
+Transactions coordinate change.
+
+Audit Events preserve history.
+
+Integration Events connect Legacy to the outside world without compromising deterministic reasoning or event-sourced integrity.
+
+Every League can therefore be reconstructed entirely from Business Events, even if every external provider disappears tomorrow.
